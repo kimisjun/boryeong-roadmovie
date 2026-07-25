@@ -10,3 +10,27 @@
 @media(max-width:760px){body{font-size:15px}.top-header{height:54px}.bottom-nav a,.bottom-nav button{min-height:62px;font-size:.68rem}.home{min-height:calc(100svh - 54px - 62px);display:block}.home-hero{min-height:calc(100svh - 54px - 62px)}.home-content{left:18px;right:18px;bottom:34px}.home h1{font-size:clamp(4.8rem,24vw,7rem)}.home-content>p{font-size:1.02rem}.home-facts{grid-template-columns:1fr 1fr}.home-facts div{padding:15px}.home-facts div:last-child{grid-column:1/-1}.home-choice{padding:16px}.page{padding-top:30px}.page-title{margin-bottom:22px}.page-title h1{font-size:2.6rem}.day-tabs button{min-height:72px;padding:10px}.day-tabs b{font-size:.86rem}.schedule li{grid-template-columns:60px 1fr;padding:15px 14px}.plan-cards{grid-template-columns:1fr}.plan-cover{padding:22px}.plan-cover h2{font-size:3.2rem}.weather-list article{grid-template-columns:1fr auto;gap:10px;padding:17px 15px}.weather-list strong{font-size:1.9rem}.weather-list span{grid-column:1/-1}.check-card label{min-height:68px;padding:11px 15px}}
 @media(max-width:340px){.bottom-nav a,.bottom-nav button{font-size:.6rem}.day-tabs small{font-size:.57rem}.day-tabs b{font-size:.76rem}.schedule li{grid-template-columns:53px 1fr}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}:focus-visible{outline:3px solid var(--coral);outline-offset:2px}
+
+/* Compact home: every item stays inside the beach photo */
+.home-page{padding-bottom:calc(68px + env(safe-area-inset-bottom));background:var(--deep)}
+.home-page .top-header{position:absolute;z-index:20;left:0;right:0;top:0;background:transparent;border:0}
+.home-page .brand{color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.35)}
+.home-page .home{display:block;min-height:calc(100svh - 68px)}
+.home-page .home-hero{min-height:calc(100svh - 68px);grid-row:auto}
+.home-page .home-shade{background:linear-gradient(90deg,rgba(3,31,39,.82),rgba(3,39,47,.24)),linear-gradient(0deg,rgba(3,27,34,.8),transparent 58%)}
+.home-page .home-content{left:max(24px,calc((100vw - 1160px)/2));right:max(24px,calc((100vw - 1160px)/2));bottom:34px;max-width:none;display:grid;grid-template-columns:minmax(360px,1fr) minmax(320px,410px);align-items:end;gap:44px}
+.home-page .home-title p{margin:8px 0 0;font-size:1.04rem;font-weight:800}
+.home-page .home h1{font-size:clamp(5rem,10vw,8.5rem);margin:12px 0}
+.home-panel{border:1px solid rgba(255,255,255,.48);background:rgba(3,35,43,.7);backdrop-filter:blur(10px);color:#fff}
+.home-panel .home-facts{display:grid;grid-template-columns:repeat(3,1fr)}
+.home-panel .home-facts div{padding:15px 13px;border-right:1px solid rgba(255,255,255,.24);border-bottom:1px solid rgba(255,255,255,.24)}
+.home-panel .home-facts div:last-child{border-right:0}
+.home-panel small{display:block;font:600 .62rem var(--display);letter-spacing:.12em;color:var(--aqua)}
+.home-panel b{display:block;margin-top:3px;font-size:.84rem}
+.home-panel .home-choice{padding:13px;background:transparent;border-bottom:1px solid rgba(255,255,255,.24)}
+.home-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px}
+.home-actions a{min-height:46px;display:grid;place-items:center;text-decoration:none;font-weight:900}
+.home-actions .primary-link{padding:0;background:var(--coral)}
+.secondary-link{border:1px solid rgba(255,255,255,.72);color:#fff}
+@media(max-width:760px){.home-page{padding-bottom:calc(62px + env(safe-area-inset-bottom))}.home-page .top-header{height:54px}.home-page .home,.home-page .home-hero{min-height:calc(100svh - 62px)}.home-page .home-bg{background-position:56% center}.home-page .home-shade{background:linear-gradient(90deg,rgba(3,31,39,.76),rgba(3,39,47,.38)),linear-gradient(0deg,rgba(3,27,34,.9),rgba(3,27,34,.08) 70%)}.home-page .home-content{left:16px;right:16px;bottom:22px;display:block}.home-page .home h1{font-size:clamp(4rem,20vw,5.8rem);margin:8px 0;line-height:.82}.home-page .home-title p{margin:5px 0 14px;font-size:.92rem}.home-panel{backdrop-filter:blur(7px)}.home-panel .home-facts div{padding:11px 9px}.home-panel b{font-size:.76rem}.home-panel .home-choice{padding:10px}.home-actions{padding:9px}.home-actions a{min-height:43px;font-size:.84rem}}
+@media(max-width:340px){.home-page .home-content{left:12px;right:12px;bottom:14px}.home-page .home h1{font-size:3.8rem}.home-panel .home-facts div{padding:9px 6px}.home-panel b{font-size:.69rem}.home-actions a{min-height:40px}}
