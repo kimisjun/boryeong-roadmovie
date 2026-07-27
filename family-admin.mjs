@@ -1,7 +1,7 @@
-import {PLAYERS, TMI_QUESTIONS, POINTING_QUESTIONS, TALK_CARDS} from './family-data.mjs?v=20260727-5';
-import {FAMILY_STATE, ADMIN_PIN_SHA256, POLL_MS} from './family-config.mjs?v=20260727-5';
-import {JsonBlobStore, startPolling} from './family-store.mjs?v=20260727-5';
-import {buildTmiRounds, scoreTmiAnswer, awardPointingQuestion, rankScores, shuffle} from './family-core.mjs?v=20260727-5';
+import {PLAYERS, TMI_QUESTIONS, POINTING_QUESTIONS, TALK_CARDS} from './family-data.mjs?v=20260727-6';
+import {FAMILY_STATE, ADMIN_PIN_SHA256, POLL_MS} from './family-config.mjs?v=20260727-6';
+import {JsonBlobStore, startPolling} from './family-store.mjs?v=20260727-6';
+import {buildTmiRounds, scoreTmiAnswer, awardPointingQuestion, rankScores, shuffle} from './family-core.mjs?v=20260727-6';
 
 const app = document.querySelector('#admin-app');
 const banner = document.querySelector('#network-banner');
@@ -11,11 +11,11 @@ const esc = value => String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp
 const emptyScores = () => Object.fromEntries(PLAYERS.map(player => [player.slug, {tmi:0, pointing:0}]));
 const bySlug = slug => PLAYERS.find(player => player.slug === slug);
 const rules = [
-  ['오늘의 순서','규칙 → 가족 TMI → 가족 지목 → 대화 카드 → 최종 시상'],
+  ['오늘의 순서','규칙 → 가족 TMI → 이미지 게임 → 대화 카드 → 최종 시상'],
   ['가족 TMI','한 사람당 10문제. 주인공을 뺀 세 명이 A~E 중 정답을 고릅니다. 정답은 +1점!'],
-  ['가족 지목','15개 질문마다 나를 제외한 한 명을 고릅니다. 최다 득표자는 모두 +1점!'],
+  ['이미지 게임','15개 질문마다 나를 제외한 한 명을 고릅니다. 최다 득표자는 모두 +1점!'],
   ['대화 카드','은준 → 하은 → 윤희 → 현신 순서로 5번씩, 정확히 20장을 이야기합니다.'],
-  ['점수와 연결','중간 순위는 TMI 각 10문제와 지목 게임이 끝날 때만 봅니다. 모두 온라인이어야 진행됩니다.']
+  ['점수와 연결','중간 순위는 TMI 각 10문제와 이미지 게임이 끝날 때만 봅니다. 모두 온라인이어야 진행됩니다.']
 ];
 let game = {version:1, phase:'collecting', locked:false, scores:emptyScores(), scoredKeys:[], awardedKeys:[]};
 let players = {};
@@ -56,7 +56,7 @@ function pinScreen(message = '') {
   });
 }
 function header() {
-  const labels = {collecting:'답변 수집',rules:'규칙',tmi:'가족 TMI',tmi_score:'TMI 순위',pointing:'가족 지목',pointing_score:'지목 순위',cards:'대화 카드',final:'최종 시상',ended:'종료'};
+  const labels = {collecting:'답변 수집',rules:'규칙',tmi:'가족 TMI',tmi_score:'TMI 순위',pointing:'이미지 게임',pointing_score:'이미지 게임 순위',cards:'대화 카드',final:'최종 시상',ended:'종료'};
   return `<header class="admin-header"><h1>FAMILY NIGHT / ${labels[game.phase] || game.phase}</h1><div class="admin-tools"><button data-action="mute">${muted ? '🔇 효과음 끔' : '🔊 효과음 켬'}</button><button data-action="lock-admin">화면 잠금</button></div></header>`;
 }
 function controls(buttons) { return `<div class="admin-controls">${buttons.map(item => `<button class="btn ${item.primary ? 'coral' : ''} ${item.wide ? 'wide' : ''}" data-action="${item.action}" ${item.disabled ? 'disabled' : ''}>${item.label}</button>`).join('')}</div>`; }
@@ -99,7 +99,7 @@ function tmiView() {
 }
 function scoreView(kind) {
   const groups = rankScores(game.scores, PLAYERS);
-  return shell(`<div class="stage-body"><span class="eyebrow">SCORE BREAK</span><h2>${kind === 'tmi' ? 'TMI 중간 순위' : '가족 지목 결과'}</h2><div class="score-grid">${groups.flatMap(group => group.players).map(player => `<article class="score-card"><b>${player.name}</b><strong>${player.total}</strong><span>TMI ${player.tmi} · 지목 ${player.pointing}</span></article>`).join('')}</div></div>`, [{action:kind==='tmi'?'after-tmi-score':'cards-start',label:kind==='tmi' ? ((game.tmi?.index ?? 0) >= 39 ? '가족 지목 시작' : '다음 사람 TMI') : '대화 카드 시작',wide:true,primary:true}]);
+  return shell(`<div class="stage-body"><span class="eyebrow">SCORE BREAK</span><h2>${kind === 'tmi' ? 'TMI 중간 순위' : '이미지 게임 결과'}</h2><div class="score-grid">${groups.flatMap(group => group.players).map(player => `<article class="score-card"><b>${player.name}</b><strong>${player.total}</strong><span>TMI ${player.tmi} · 이미지 ${player.pointing}</span></article>`).join('')}</div></div>`, [{action:kind==='tmi'?'after-tmi-score':'cards-start',label:kind==='tmi' ? ((game.tmi?.index ?? 0) >= 39 ? '이미지 게임 시작' : '다음 사람 TMI') : '대화 카드 시작',wide:true,primary:true}]);
 }
 function pointingInfo() {
   const state = game.pointing || {}; const question = POINTING_QUESTIONS[state.index]; const key = question ? `pointing-${question.id}` : '';
@@ -109,8 +109,8 @@ function pointingInfo() {
 function pointingView() {
   const {state,question,votes,count} = pointingInfo(); if (!question) return scoreView('pointing');
   const counts = Object.values(votes).reduce((map,slug) => ({...map,[slug]:(map[slug]||0)+1}),{}); const blocked=!allOnline();
-  return shell(`<div class="stage-body"><span class="eyebrow">FAMILY POINTING · ${state.index + 1}/15</span><h2 class="question-title">${esc(question.text)}</h2>${blocked?'<div class="offline-note">모두 재접속하기 전 공개와 다음 진행이 차단됩니다.</div>':''}${state.revealed ? `<div class="result-bars">${PLAYERS.map(player=>`<div class="result-row" style="--person:${player.color}"><span>${player.name}</span><div class="bar"><span style="width:${(counts[player.slug]||0)*25}%"></span></div><b>${counts[player.slug]||0}</b></div>`).join('')}</div><p>개인 투표자는 공개하지 않습니다.</p>`:'<p>각 참가자는 본인을 제외한 세 명 중 한 명을 고릅니다.</p>'}<p><b>${count}/4 응답</b></p></div>`, [
-    {action:'pointing-reveal',label:'결과 공개',wide:true,primary:true,disabled:state.revealed||count!==4||blocked},{action:'pointing-next',label:state.index===14?'지목 게임 종료':'다음 질문',wide:true,disabled:!state.revealed||blocked}
+  return shell(`<div class="stage-body"><span class="eyebrow">IMAGE GAME · ${state.index + 1}/15</span><h2 class="question-title">${esc(question.text)}</h2>${blocked?'<div class="offline-note">모두 재접속하기 전 공개와 다음 진행이 차단됩니다.</div>':''}${state.revealed ? `<div class="result-bars">${PLAYERS.map(player=>`<div class="result-row" style="--person:${player.color}"><span>${player.name}</span><div class="bar"><span style="width:${(counts[player.slug]||0)*25}%"></span></div><b>${counts[player.slug]||0}</b></div>`).join('')}</div><p>개인 투표자는 공개하지 않습니다.</p>`:'<p>각 참가자는 본인을 제외한 세 명 중 한 명을 고릅니다.</p>'}<p><b>${count}/4 응답</b></p></div>`, [
+    {action:'pointing-reveal',label:'결과 공개',wide:true,primary:true,disabled:state.revealed||count!==4||blocked},{action:'pointing-next',label:state.index===14?'이미지 게임 종료':'다음 질문',wide:true,disabled:!state.revealed||blocked}
   ]);
 }
 function cardsView() {
@@ -123,7 +123,7 @@ function cardsView() {
 }
 function finalView() {
   const groups=rankScores(game.scores,PLAYERS).slice(0,3);
-  return shell(`<div class="stage-body"><span class="eyebrow">FINAL CEREMONY</span><h2>우리 가족 최종 결과</h2><div class="podium">${groups.map((group,index)=>`<div class="podium-group"><strong>${group.tied?'':`${index+1}위`}</strong>${group.players.map(player=>`<h3>${player.name}</h3>`).join('')}<b>${group.total}점</b><small>${group.players.map(p=>`TMI ${p.tmi} · 지목 ${p.pointing}`).join(' / ')}</small></div>`).join('')}</div></div><div class="confetti">${Array.from({length:30},(_,i)=>`<i style="left:${(i*37)%100}%;animation-delay:${(i%10)*.2}s;background:${PLAYERS[i%4].color}"></i>`).join('')}</div>`,[{action:'end',label:'행사 종료',wide:true,primary:true}]);
+  return shell(`<div class="stage-body"><span class="eyebrow">FINAL CEREMONY</span><h2>우리 가족 최종 결과</h2><div class="podium">${groups.map((group,index)=>`<div class="podium-group"><strong>${group.tied?'':`${index+1}위`}</strong>${group.players.map(player=>`<h3>${player.name}</h3>`).join('')}<b>${group.total}점</b><small>${group.players.map(p=>`TMI ${p.tmi} · 이미지 ${p.pointing}`).join(' / ')}</small></div>`).join('')}</div></div><div class="confetti">${Array.from({length:30},(_,i)=>`<i style="left:${(i*37)%100}%;animation-delay:${(i%10)*.2}s;background:${PLAYERS[i%4].color}"></i>`).join('')}</div>`,[{action:'end',label:'행사 종료',wide:true,primary:true}]);
 }
 function endedView(){return shell('<div class="stage-body"><span class="eyebrow">THANK YOU</span><h2>오늘도 우리 가족, 완료!</h2><p>함께 웃고 이야기한 시간이 최종 상품입니다.</p></div>',[]);}
 function render() {

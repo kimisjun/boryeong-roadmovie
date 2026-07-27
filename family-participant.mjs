@@ -1,7 +1,7 @@
-import {PLAYERS, TMI_QUESTIONS, POINTING_QUESTIONS} from './family-data.mjs?v=20260727-5';
-import {FAMILY_STATE, POLL_MS} from './family-config.mjs?v=20260727-5';
-import {JsonBlobStore, startPolling} from './family-store.mjs?v=20260727-5';
-import {submissionStatus, tmiInteractionState} from './family-core.mjs?v=20260727-5';
+import {PLAYERS, TMI_QUESTIONS, POINTING_QUESTIONS} from './family-data.mjs?v=20260727-6';
+import {FAMILY_STATE, POLL_MS} from './family-config.mjs?v=20260727-6';
+import {JsonBlobStore, startPolling} from './family-store.mjs?v=20260727-6';
+import {submissionStatus, tmiInteractionState} from './family-core.mjs?v=20260727-6';
 
 const app = document.querySelector('#family-app');
 const banner = document.querySelector('#network-banner');
@@ -47,7 +47,7 @@ function setPageMode() { document.body.classList.toggle('live', isLive()); }
 function scoreMarkup(scores = emptyScores()) {
   return `<div class="score-grid">${PLAYERS.map(player => {
     const score = scores[player.slug] || {};
-    return `<article class="score-card" style="--person:${player.color}"><b>${player.name}</b><strong>${Number(score.tmi || 0) + Number(score.pointing || 0)}</strong><span>TMI ${Number(score.tmi || 0)} · 지목 ${Number(score.pointing || 0)}</span></article>`;
+    return `<article class="score-card" style="--person:${player.color}"><b>${player.name}</b><strong>${Number(score.tmi || 0) + Number(score.pointing || 0)}</strong><span>TMI ${Number(score.tmi || 0)} · 이미지 ${Number(score.pointing || 0)}</span></article>`;
   }).join('')}</div>`;
 }
 function chooseName() {
@@ -90,7 +90,7 @@ function changeName() { localStorage.removeItem('family-player'); slug = null; m
 function submittedDashboard(player) {
   const statuses = submissionStatus(PLAYERS, {...peerStates, [slug]:me});
   const submitted = PLAYERS.map(item => statuses[item.slug]);
-  app.innerHTML = `<div class="who-bar"><span class="person-chip" style="--person:${player.color}">${player.name}</span><button class="text-button" id="change-name">이름 변경</button></div><header class="family-hero"><span class="eyebrow">READY</span><h1>답변 준비 완료!</h1><p>행사 시작 전까지 언제든 수정할 수 있어요.</p></header><section class="panel"><h2>준비 현황</h2><div class="status-grid">${PLAYERS.map((item,index) => `<article class="status-card ${submitted[index] ? 'ready' : ''}" style="--person:${item.color}"><b>${item.name}</b><span>${submitted[index] ? '준비 완료' : '작성 중'}</span></article>`).join('')}</div></section><section class="panel"><h2>현재 점수</h2>${scoreMarkup(game.scores)}</section><div class="actions"><button class="btn primary" id="edit">내 답변 수정</button></div><details class="panel"><summary>오늘의 레크리에이션 게임</summary><ol class="game-list"><li><b>가족 TMI</b> · 서로의 답을 맞혀요.</li><li><b>가족 지목</b> · 질문에 어울리는 가족을 골라요.</li><li><b>대화 카드</b> · 각자 다섯 질문에 답해요.</li></ol></details>`;
+  app.innerHTML = `<div class="who-bar"><span class="person-chip" style="--person:${player.color}">${player.name}</span><button class="text-button" id="change-name">이름 변경</button></div><header class="family-hero"><span class="eyebrow">READY</span><h1>답변 준비 완료!</h1><p>행사 시작 전까지 언제든 수정할 수 있어요.</p></header><section class="panel"><h2>준비 현황</h2><div class="status-grid">${PLAYERS.map((item,index) => `<article class="status-card ${submitted[index] ? 'ready' : ''}" style="--person:${item.color}"><b>${item.name}</b><span>${submitted[index] ? '준비 완료' : '작성 중'}</span></article>`).join('')}</div></section><section class="panel"><h2>현재 점수</h2>${scoreMarkup(game.scores)}</section><div class="actions"><button class="btn primary" id="edit">내 답변 수정</button></div><details class="panel"><summary>오늘의 레크리에이션 게임</summary><ol class="game-list"><li><b>가족 TMI</b> · 서로의 답을 맞혀요.</li><li><b>이미지 게임</b> · 질문에 어울리는 가족을 골라요.</li><li><b>대화 카드</b> · 각자 다섯 질문에 답해요.</li></ol></details>`;
   app.querySelector('#change-name').addEventListener('click', changeName);
   app.querySelector('#edit').addEventListener('click', async () => { await ownWrite({...me, submitted:false, draftIndex:0}); render(); });
 }
@@ -117,11 +117,11 @@ function liveTmi() {
 }
 function livePointing() {
   const state = game.pointing || {}; const question = POINTING_QUESTIONS[state.index];
-  if (!question) return liveWaiting('지목 게임을 준비하고 있어요', '진행자 화면을 봐 주세요.');
+  if (!question) return liveWaiting('이미지 게임을 준비하고 있어요', '진행자 화면을 봐 주세요.');
   const key = `pointing-${question.id}`; const selected = me?.live?.game === 'pointing' && me.live.key === key ? me.live.value : null;
   const candidates = PLAYERS.filter(player => player.slug !== slug);
   let body = `<div class="choice-list">${candidates.map(player => `<button class="choice ${selected === player.slug ? 'selected' : ''}" style="--person:${player.color}" data-person="${player.slug}" ${state.revealed ? 'disabled' : ''}><span class="person-chip" style="--person:${player.color}">${player.name}</span>${state.revealed ? `<small class="reveal-names">${Number(game.pointingCounts?.[player.slug] || 0)}표</small>` : ''}</button>`).join('')}</div><p class="muted">${state.revealed ? '투표자는 공개하지 않아요.' : selected ? '제출 완료 · 공개 전까지 바꿀 수 있어요.' : '나를 제외한 가족 한 명을 골라요.'}</p>`;
-  app.innerHTML = liveFrame(`<span>가족 지목 · ${state.index + 1}/15</span><span>${Number(game.responseCount || 0)}/4 응답</span>`, `<h1 class="live-question">${esc(question.text)}</h1>${body}`);
+  app.innerHTML = liveFrame(`<span>이미지 게임 · ${state.index + 1}/15</span><span>${Number(game.responseCount || 0)}/4 응답</span>`, `<h1 class="live-question">${esc(question.text)}</h1>${body}`);
   app.querySelectorAll('[data-person]').forEach(button => button.addEventListener('click', async () => { await setLive('pointing', key, button.dataset.person); render(); }));
 }
 function liveFrame(top, body) { return `<section class="live-shell"><header class="live-top"><span class="eyebrow">FAMILY NIGHT</span>${top}</header><div class="live-center">${game.offlineMessage ? `<div class="offline-note">${esc(game.offlineMessage)}</div>` : ''}${body}</div></section>`; }
@@ -135,7 +135,7 @@ function render() {
   if (game.phase === 'tmi') return liveTmi();
   if (game.phase === 'pointing') return livePointing();
   if (game.phase === 'tmi_score') return liveScore('TMI 중간 순위');
-  if (game.phase === 'pointing_score') return liveScore('지목 게임 순위');
+  if (game.phase === 'pointing_score') return liveScore('이미지 게임 순위');
   if (game.phase === 'final' || game.phase === 'ended') return finalScreen();
   const messages = {rules:['규칙 설명 중','공용 화면을 봐 주세요.'],cards:['대화 카드 시간','공용 화면에서 함께 이야기해요.']};
   liveWaiting(...(messages[game.phase] || ['잠시만 기다려 주세요','진행자가 다음 순서를 준비 중이에요.']));
