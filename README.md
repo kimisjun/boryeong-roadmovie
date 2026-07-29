@@ -6,11 +6,12 @@
 
 - `index.html`: 홈
 - `itinerary.html`: 3일 일정
-- `tuesday.html`: 바다/실내 코스 선택
-- `weather.html`: 네이버 확인 날씨
+- `recreation.html`: 가족 레크리에이션
+- `budget.html`: 실제 여행비 내역
 - `packing.html`: 준비물 체크리스트
+- `weather.html`: 여행 당시 날씨 기록(직접 링크 보존)
 
-하단 탭은 각 독립 페이지로 이동합니다. 선택 코스와 체크리스트는 같은 브라우저의 `localStorage`에만 저장됩니다.
+하단 탭은 각 독립 페이지로 이동합니다. 체크리스트는 같은 브라우저의 `localStorage`에만 저장됩니다.
 
 ## 로컬 실행
 
